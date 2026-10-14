@@ -77,14 +77,26 @@ public class MainActivity extends AppCompatActivity {
                     respuesta.append(linea);
                 }
                 reader.close();
+                String jsonString = respuesta.toString();
+                org.json.JSONArray jsonArray = new org.json.JSONArray(jsonString);
+                BaseDatosHelper dbHelper = new BaseDatosHelper(MainActivity.this);
 
-                // Formatear un poquito para que se lea lindo en pantalla
-                String jsonFormateado = respuesta.toString()
-                        .replace("},{", "},\n\n{")
-                        .replace("[{", "[\n{")
-                        .replace("}]", "}\n]");
+                // Recorremos el JSON y guardamos cada hospital en SQLite
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    org.json.JSONObject hospital = jsonArray.getJSONObject(i);
+                    dbHelper.guardarEstablecimiento(
+                            hospital.getInt("id"),
+                            hospital.getString("nombre"),
+                            hospital.getString("institucion"),
+                            hospital.getString("localidad"),
+                            hospital.getString("direccion"),
+                            hospital.getString("telefono"),
+                            hospital.getString("requisitos")
+                    );
+                }
 
-                runOnUiThread(() -> txtResultado.setText("\n✅ Respuesta JSON de Spring Boot:\n\n" + jsonFormateado));
+                runOnUiThread(() -> txtResultado.setText("¡Datos descargados y guardados en la base de datos offline (SQLite) con éxito!\n\nYa podés apagar el Wi-Fi."));
+
             } catch (Exception e) {
                 runOnUiThread(() -> txtResultado.setText("\n❌ Error al conectar: " + e.getMessage() +
                         "\n\nVerificá que IntelliJ IDEA siga corriendo el servidor."));
