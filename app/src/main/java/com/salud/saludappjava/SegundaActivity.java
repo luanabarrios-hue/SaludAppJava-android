@@ -12,14 +12,17 @@ import java.util.List;
 public class SegundaActivity extends AppCompatActivity {
 
     private EditText inputCedula, inputNombre, inputTelefono;
-    private Button btnSeleccionarEspecialidad, btnSeleccionarDepartamento, btnSeleccionarHospital, btnVerDisponibilidad, btnVerCitasAdmin, btnVolver;
+    private Button btnSeleccionarEspecialidad, btnSeleccionarDepartamento, btnSeleccionarHospital,
+            btnVerDisponibilidad, btnVerCitasAdmin, btnVolver, btnSincronizarBackend, btnDescargarBackend;
     private BaseDatosHelper dbHelper;
 
     private String especialidadElegida = "";
     private String departamentoElegido = "";
     private String hospitalElegido = "";
 
-    // Los 17 departamentos oficiales de Paraguay + Capital (Asunción)
+    // URL de ngrok configurada directamente para tu proyecto
+    private static final String NGROK_URL = "https://conch-subscribe-retiring.ngrok-free.dev";
+
     private final String[] departamentosParaguay = {
             "Capital (Asunción)", "Concepción", "San Pedro", "Cordillera", "Guairá",
             "Caaguazú", "Caazapá", "Itapúa", "Misiones", "Paraguarí", "Alto Paraná",
@@ -39,6 +42,8 @@ public class SegundaActivity extends AppCompatActivity {
 
         dbHelper = new BaseDatosHelper(this);
 
+        descargarCitasDelServidor(); // NUEVO: trae las citas del servidor al abrir la pantalla
+
         inputCedula = findViewById(R.id.inputCedula);
         inputNombre = findViewById(R.id.inputNombre);
         inputTelefono = findViewById(R.id.inputTelefono);
@@ -49,6 +54,9 @@ public class SegundaActivity extends AppCompatActivity {
         btnVerDisponibilidad = findViewById(R.id.btnVerDisponibilidad);
         btnVerCitasAdmin = findViewById(R.id.btnVerCitasAdmin);
         btnVolver = findViewById(R.id.btnVolver);
+
+        btnSincronizarBackend = findViewById(R.id.btnSincronizarBackend);
+        btnDescargarBackend = findViewById(R.id.btnDescargarBackend);
 
         btnSeleccionarEspecialidad.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -72,7 +80,6 @@ public class SegundaActivity extends AppCompatActivity {
             builder.show();
         });
 
-        // Ventana informativa que muestra qué hospitales SÍ tienen y cuáles NO tienen la especialidad
         btnSeleccionarHospital.setOnClickListener(v -> {
             if (departamentoElegido.isEmpty()) {
                 Toast.makeText(this, "Seleccione primero un Departamento.", Toast.LENGTH_SHORT).show();
@@ -85,39 +92,32 @@ public class SegundaActivity extends AppCompatActivity {
 
             List<String[]> estadoHospitales = dbHelper.obtenerEstadoHospitalesPorEspecialidad(departamentoElegido, especialidadElegida);
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("📋 DISPONIBILIDAD PARA: ").append(especialidadElegida.toUpperCase()).append("\n");
-            sb.append("📍 Departamento: ").append(departamentoElegido).append("\n\n");
-
             final String[] listaNombresHosp = new String[estadoHospitales.size()];
             for (int i = 0; i < estadoHospitales.size(); i++) {
                 String hosp = estadoHospitales.get(i)[0];
                 String tiene = estadoHospitales.get(i)[1];
-                listaNombresHosp[i] = hosp;
 
                 if (tiene.equals("SI")) {
-                    sb.append("🟢 [SÍ TIENE] ").append(hosp).append("\n");
+                    listaNombresHosp[i] = "🟢 " + hosp + " (SÍ TIENE)";
                 } else {
-                    sb.append("🔴 [NO TIENE] ").append(hosp).append("\n");
+                    listaNombresHosp[i] = "🔴 " + hosp + " (NO TIENE)";
                 }
             }
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("🏥 Estado en " + departamentoElegido);
-            builder.setMessage(sb.toString());
+            builder.setTitle("🏥 " + especialidadElegida + " en " + departamentoElegido);
             builder.setItems(listaNombresHosp, (dialog, which) -> {
-                String elegido = listaNombresHosp[which];
-                String nombreLimpio = elegido.split("\\(")[0].trim();
-                boolean tieneEsp = dbHelper.hospitalTieneEspecialidad(nombreLimpio, especialidadElegida);
+                String hospOriginal = estadoHospitales.get(which)[0];
+                String tieneEsp = estadoHospitales.get(which)[1];
 
-                if (!tieneEsp) {
+                if (!tieneEsp.equals("SI")) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(this);
                     alert.setTitle("⚠️ Especialidad No Disponible");
                     alert.setMessage("El centro médico seleccionado NO cuenta con " + especialidadElegida + ".\n\nPor favor elija un hospital marcado con 🟢.");
                     alert.setPositiveButton("Entendido", null);
                     alert.show();
                 } else {
-                    hospitalElegido = elegido;
+                    hospitalElegido = hospOriginal;
                     btnSeleccionarHospital.setText("HOSPITAL: " + hospitalElegido);
                     Toast.makeText(this, "Hospital confirmado con especialista disponible.", Toast.LENGTH_SHORT).show();
                 }
@@ -160,6 +160,25 @@ public class SegundaActivity extends AppCompatActivity {
 
             builder.show();
         });
+
+        if (btnSincronizarBackend != null) {
+            btnSincronizarBackend.setOnClickListener(v -> {
+                String cedula = inputCedula.getText().toString().trim();
+                String nombre = inputNombre.getText().toString().trim();
+                String telefono = inputTelefono.getText().toString().trim();
+
+                if (cedula.isEmpty() || nombre.isEmpty() || telefono.isEmpty() || hospitalElegido.isEmpty() || especialidadElegida.isEmpty()) {
+                    Toast.makeText(this, "Complete los datos y seleccione hospital/especialidad para sincronizar.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                enviarCitaAlServidor(cedula, nombre, telefono, departamentoElegido, hospitalElegido, especialidadElegida, "25/10/2026", "08:00");
+            });
+        }
+
+        if (btnDescargarBackend != null) {
+            btnDescargarBackend.setOnClickListener(v -> descargarCitasDelServidor());
+        }
 
         btnVerCitasAdmin.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -204,7 +223,8 @@ public class SegundaActivity extends AppCompatActivity {
     private void procesarReserva(String cedula, String nombre, String telefono, String depto, String hospital, String especialidad, String doctor, String fecha, String hora) {
         boolean ok = dbHelper.guardarCita(cedula, nombre, telefono, depto, hospital, especialidad, doctor, fecha, hora);
         if (ok) {
-            Toast.makeText(this, "¡Cita confirmada en " + hospital + "!", Toast.LENGTH_LONG).show();
+            enviarCitaAlServidor(cedula, nombre, telefono, depto, hospital, especialidad, fecha, hora); // NUEVO: manda la cita al servidor
+            Toast.makeText(this, "¡Cita confirmada localmente en " + hospital + "!", Toast.LENGTH_LONG).show();
             inputCedula.setText("");
             inputNombre.setText("");
             inputTelefono.setText("");
@@ -217,5 +237,131 @@ public class SegundaActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Error: El horario ya fue ocupado.", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void enviarCitaAlServidor(String cedula, String nombre, String telefono, String departamento, String hospital, String especialidad, String fecha, String hora) {
+        new Thread(() -> {
+            try {
+                java.net.URL url = new java.net.URL(NGROK_URL + "/api/citas/sincronizar");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json; utf-8");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestProperty("ngrok-skip-browser-warning", "true"); // <-- Cabecera clave para ngrok
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(5000);
+
+                String jsonInputString = "{" +
+                        "\"cedula\": \"" + cedula + "\"," +
+                        "\"nombre\": \"" + nombre + "\"," +
+                        "\"telefono\": \"" + telefono + "\"," +
+                        "\"departamento\": \"" + departamento + "\"," +
+                        "\"hospital\": \"" + hospital + "\"," +
+                        "\"especialidad\": \"" + especialidad + "\"," +
+                        "\"fecha\": \"" + fecha + "\"," +
+                        "\"hora\": \"" + hora + "\"" +
+                        "}";
+
+                try (java.io.OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonInputString.getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                int responseCode = conn.getResponseCode();
+
+                java.io.BufferedReader br;
+                if (responseCode >= 200 && responseCode < 300) {
+                    br = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), "utf-8"));
+                } else {
+                    br = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream(), "utf-8"));
+                }
+
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                br.close();
+                conn.disconnect();
+
+                runOnUiThread(() -> {
+                    if (responseCode >= 200 && responseCode < 300) {
+                        Toast.makeText(this, "🌐 " + response.toString(), Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, "⚠️ Servidor respondió con código: " + responseCode, Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                String errorReal = e.getMessage();
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "❌ Error de conexión: " + errorReal, Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    private void descargarCitasDelServidor() {
+        new Thread(() -> {
+            try {
+                java.net.URL url = new java.net.URL(NGROK_URL + "/api/citas/listar");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestProperty("ngrok-skip-browser-warning", "true"); // <-- Cabecera clave para ngrok
+                conn.setConnectTimeout(5000);
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == java.net.HttpURLConnection.HTTP_OK) {
+                    java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), "utf-8"));
+                    String inputLine;
+                    StringBuilder content = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        content.append(inputLine);
+                    }
+                    in.close();
+                    conn.disconnect();
+
+                    org.json.JSONArray jsonArray = new org.json.JSONArray(content.toString());
+                    int insertadas = 0;
+
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        org.json.JSONObject obj = jsonArray.getJSONObject(i);
+                        String cedula = obj.optString("cedula");
+                        String nombre = obj.optString("nombre");
+                        String telefono = obj.optString("telefono");
+                        String departamento = obj.optString("departamento");
+                        String hospital = obj.optString("hospital");
+                        String especialidad = obj.optString("especialidad");
+                        String doctor = obj.optString("doctor", "Dr. Especialista");
+                        String fecha = obj.optString("fecha");
+                        String hora = obj.optString("hora");
+
+                        boolean ocupado = dbHelper.estaHorarioOcupado(hospital, especialidad, fecha, hora);
+                        if (!ocupado) {
+                            dbHelper.guardarCita(cedula, nombre, telefono, departamento, hospital, especialidad, doctor, fecha, hora);
+                            insertadas++;
+                        }
+                    }
+
+                    int finalInsertadas = insertadas;
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "📥 ¡Descarga exitosa! Se sincronizaron " + finalInsertadas + " citas nuevas a SQLite.", Toast.LENGTH_LONG).show();
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "⚠️ El servidor no respondió correctamente al listar.", Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                String errorReal = e.getMessage();
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "❌ Error al descargar: " + errorReal, Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
     }
 }

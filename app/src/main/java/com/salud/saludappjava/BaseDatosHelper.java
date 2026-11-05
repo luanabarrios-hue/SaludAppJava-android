@@ -10,8 +10,8 @@ import java.util.List;
 
 public class BaseDatosHelper extends SQLiteOpenHelper {
 
-    private static final String NOMBRE_DB = "salud_local.db";
-    private static final int VERSION_DB = 16; // Versión actualizada
+    private static final String NOMBRE_DB = "SaludApp.db";
+    private static final int VERSION_DB = 1;
 
     public BaseDatosHelper(Context context) {
         super(context, NOMBRE_DB, null, VERSION_DB);
@@ -19,7 +19,8 @@ public class BaseDatosHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS solicitudes (" +
+        // Tabla de citas locales para funcionamiento offline
+        db.execSQL("CREATE TABLE citas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "cedula TEXT, " +
                 "nombre TEXT, " +
@@ -29,206 +30,105 @@ public class BaseDatosHelper extends SQLiteOpenHelper {
                 "especialidad TEXT, " +
                 "doctor TEXT, " +
                 "fecha TEXT, " +
-                "hora TEXT);");
-
-        db.execSQL("CREATE TABLE IF NOT EXISTS establecimientos (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "departamento TEXT, " +
-                "nombre_hospital TEXT, " +
-                "institucion TEXT, " +
-                "especialidades_permitidas TEXT);");
-
-        // 1. Hospitales principales y de referencia nacional con alta variedad
-        insertarEstablecimiento(db, "Central", "Hospital General de San Lorenzo (Calleí)", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Odontologia, Dermatologia, Psicologia, Cardiologia");
-        insertarEstablecimiento(db, "Central", "Hospital de Especialidades Quirúrgicas Ingavi", "IPS", "Traumatologia, Clinica, Cirugia, Cardiologia, Urologia");
-        insertarEstablecimiento(db, "Capital (Asunción)", "Hospital Central del IPS", "IPS", "Pediatria, Psicologia, Clinica, Traumatologia, Cardiologia, Neurologia, Oftalmologia, Urologia");
-        insertarEstablecimiento(db, "Capital (Asunción)", "Hospital de Clínicas (UNA)", "MSPBS / UNA", "Pediatria, Psicologia, Clinica, Traumatologia, Cardiologia, Oftalmologia, Psiquiatria");
-
-        // 2. Cobertura exacta y realista para los 17 Departamentos + Asunción
-        // CONCEPCIÓN
-        insertarEstablecimiento(db, "Concepción", "Hospital Regional de Concepción", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Cirugia");
-        insertarEstablecimiento(db, "Concepción", "Puesto Sanitario IPS Concepción", "IPS", "Clinica, Pediatria");
-
-        // SAN PEDRO (Ejemplo donde se evalúa qué hay y qué no hay)
-        insertarEstablecimiento(db, "San Pedro", "Hospital General de Santa Rosa del Aguaray", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Cirugia");
-        insertarEstablecimiento(db, "San Pedro", "Hospital Regional de San Pedro de Ycuamandyyú", "MSPBS", "Pediatria, Clinica, Ginecologia");
-        insertarEstablecimiento(db, "San Pedro", "Puesto Sanitario IPS San Pedro", "IPS", "Clinica, Odontologia");
-
-        // CORDILLERA
-        insertarEstablecimiento(db, "Cordillera", "Hospital Regional de Liniers / Caacupé", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Oftalmologia");
-        insertarEstablecimiento(db, "Cordillera", "Puesto Sanitario IPS Caacupé", "IPS", "Clinica, Pediatria");
-
-        // GUAIRÁ
-        insertarEstablecimiento(db, "Guairá", "Hospital Regional de Villarrica", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Cardiologia");
-        insertarEstablecimiento(db, "Guairá", "IPS Villarrica", "IPS", "Clinica, Pediatria, Odontologia");
-
-        // CAAGUAZÚ
-        insertarEstablecimiento(db, "Caaguazú", "Hospital Regional de Coronel Oviedo", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Cirugia");
-        insertarEstablecimiento(db, "Caaguazú", "Hospital Distrital de Caaguazú", "MSPBS", "Pediatria, Clinica, Ginecologia");
-        insertarEstablecimiento(db, "Caaguazú", "IPS Coronel Oviedo", "IPS", "Clinica, Pediatria, Traumatologia");
-
-        // CAAZAPÁ
-        insertarEstablecimiento(db, "Caazapá", "Hospital Regional de Caazapá", "MSPBS", "Pediatria, Clinica, Ginecologia, Traumatologia");
-        insertarEstablecimiento(db, "Caazapá", "IPS Caazapá", "IPS", "Clinica, Odontologia");
-
-        // ITAPÚA
-        insertarEstablecimiento(db, "Itapúa", "Hospital Regional de Encarnación", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Psicologia, Oftalmologia, Cardiologia");
-        insertarEstablecimiento(db, "Itapúa", "IPS Encarnación", "IPS", "Clinica, Pediatria, Traumatologia, Cirugia");
-
-        // MISIONES
-        insertarEstablecimiento(db, "Misiones", "Hospital Regional de San Juan Bautista", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia");
-        insertarEstablecimiento(db, "Misiones", "IPS San Juan Bautista", "IPS", "Clinica, Pediatria");
-
-        // PARAGUARÍ
-        insertarEstablecimiento(db, "Paraguarí", "Hospital Regional de Paraguarí", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia");
-        insertarEstablecimiento(db, "Paraguarí", "IPS Paraguarí", "IPS", "Clinica, Pediatria");
-
-        // ALTO PARANÁ
-        insertarEstablecimiento(db, "Alto Paraná", "Hospital Regional de Ciudad del Este", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Psicologia, Cardiologia, Oftalmologia");
-        insertarEstablecimiento(db, "Alto Paraná", "Hospital Subcentral IPS Ciudad del Este", "IPS", "Clinica, Pediatria, Traumatologia, Cirugia, Urologia");
-
-        // ÑEEMBUCÚ
-        insertarEstablecimiento(db, "Ñeembucú", "Hospital Regional de Pilar", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia");
-        insertarEstablecimiento(db, "Ñeembucú", "IPS Pilar", "IPS", "Clinica, Pediatria");
-
-        // AMAMBAY
-        insertarEstablecimiento(db, "Amambay", "Hospital Regional de Pedro Juan Caballero", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia, Cirugia");
-        insertarEstablecimiento(db, "Amambay", "IPS Pedro Juan Caballero", "IPS", "Clinica, Pediatria, Traumatologia");
-
-        // CANINDEYÚ
-        insertarEstablecimiento(db, "Canindeyú", "Hospital Regional de Salto del Guairá", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia");
-        insertarEstablecimiento(db, "Canindeyú", "IPS Salto del Guairá", "IPS", "Clinica, Pediatria");
-
-        // PRESIDENTE HAYES
-        insertarEstablecimiento(db, "Presidente Hayes", "Hospital Regional de Villa Hayes", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia");
-        insertarEstablecimiento(db, "Presidente Hayes", "IPS Villa Hayes", "IPS", "Clinica, Pediatria");
-
-        // BOQUERÓN
-        insertarEstablecimiento(db, "Boquerón", "Hospital Regional de Filadelfia", "MSPBS", "Pediatria, Clinica, Traumatologia, Ginecologia");
-        insertarEstablecimiento(db, "Boquerón", "IPS Filadelfia", "IPS", "Clinica, Pediatria");
-
-        // ALTO PARAGUAY
-        insertarEstablecimiento(db, "Alto Paraguay", "Hospital Regional de Fuerte Olimpo", "MSPBS", "Pediatria, Clinica, Ginecologia");
-        insertarEstablecimiento(db, "Alto Paraguay", "Puesto Sanitario IPS Fuerte Olimpo", "IPS", "Clinica");
-    }
-
-    private void insertarEstablecimiento(SQLiteDatabase db, String depto, String hosp, String inst, String espec) {
-        ContentValues cv = new ContentValues();
-        cv.put("departamento", depto);
-        cv.put("nombre_hospital", hosp);
-        cv.put("institucion", inst);
-        cv.put("especialidades_permitidas", espec);
-        db.insert("establecimientos", null, cv);
+                "hora TEXT)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS solicitudes;");
-        db.execSQL("DROP TABLE IF EXISTS establecimientos;");
+        db.execSQL("DROP TABLE IF EXISTS citas");
         onCreate(db);
     }
 
-    // Devuelve el estado detallado (SI / NO) de los hospitales del departamento ante la especialidad buscada
-    public List<String[]> obtenerEstadoHospitalesPorEspecialidad(String depto, String especialidadBuscada) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT nombre_hospital, institucion, especialidades_permitidas FROM establecimientos WHERE departamento = ?", new String[]{depto});
-        List<String[]> listaResultado = new ArrayList<>();
-
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                String nombreHosp = cursor.getString(0) + " (" + cursor.getString(1) + ")";
-                String especialidades = cursor.getString(2).toLowerCase();
-                boolean tiene = especialidades.contains(especialidadBuscada.toLowerCase().trim());
-                listaResultado.add(new String[]{nombreHosp, tiene ? "SI" : "NO"});
-            } while (cursor.moveToNext());
-            cursor.close();
-        } else {
-            listaResultado.add(new String[]{"Hospital Regional de " + depto + " (MSPBS)", "SI"});
-            listaResultado.add(new String[]{"Puesto Sanitario IPS " + depto + " (IPS)", "SI"});
+    // Guardar cita localmente asegurando que no se duplique el mismo horario en el mismo hospital y especialidad
+    public boolean guardarCita(String cedula, String nombre, String telefono, String depto, String hospital, String especialidad, String doctor, String fecha, String hora) {
+        if (estaHorarioOcupado(hospital, especialidad, fecha, hora)) {
+            return false; // Horario ya ocupado
         }
-        db.close();
-        return listaResultado;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("cedula", cedula);
+        values.put("nombre", nombre);
+        values.put("telefono", telefono);
+        values.put("departamento", depto);
+        values.put("hospital", hospital);
+        values.put("especialidad", especialidad);
+        values.put("doctor", doctor);
+        values.put("fecha", fecha);
+        values.put("hora", hora);
+
+        long resultado = db.insert("citas", null, values);
+        return resultado != -1;
     }
 
-    public boolean hospitalTieneEspecialidad(String nombreHospitalLimpio, String especialidadBuscada) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT especialidades_permitidas FROM establecimientos WHERE nombre_hospital LIKE ?",
-                new String[]{"%" + nombreHospitalLimpio + "%"});
-        boolean tiene = false;
-        if (cursor != null && cursor.moveToFirst()) {
-            String especialidades = cursor.getString(0).toLowerCase();
-            if (especialidades.contains(especialidadBuscada.toLowerCase().trim())) {
-                tiene = true;
-            }
-        } else {
-            tiene = true;
-        }
-        if (cursor != null) cursor.close();
-        db.close();
-        return tiene;
-    }
-
+    // Verificar si un horario ya está reservado (Evita duplicados)
     public boolean estaHorarioOcupado(String hospital, String especialidad, String fecha, String hora) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM solicitudes WHERE hospital = ? AND especialidad = ? AND fecha = ? AND hora = ?",
+        Cursor cursor = db.rawQuery("SELECT * FROM citas WHERE hospital = ? AND especialidad = ? AND fecha = ? AND hora = ?",
                 new String[]{hospital, especialidad, fecha, hora});
         boolean ocupado = cursor.getCount() > 0;
         cursor.close();
-        db.close();
         return ocupado;
     }
 
-    public boolean guardarCita(String cedula, String nombre, String telefono, String depto, String hospital, String especialidad, String doctor, String fecha, String hora) {
-        if (estaHorarioOcupado(hospital, especialidad, fecha, hora)) return false;
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put("cedula", cedula);
-        cv.put("nombre", nombre);
-        cv.put("telefono", telefono);
-        cv.put("departamento", depto);
-        cv.put("hospital", hospital);
-        cv.put("especialidad", especialidad);
-        cv.put("doctor", doctor);
-        cv.put("fecha", fecha);
-        cv.put("hora", hora);
-        long res = db.insert("solicitudes", null, cv);
-        db.close();
-        return res != -1;
+    // Obtener estado de hospitales por departamento para la validación visual (🟢 / 🔴)
+    public List<String[]> obtenerEstadoHospitalesPorEspecialidad(String departamento, String especialidad) {
+        List<String[]> lista = new ArrayList<>();
+
+        if (departamento.equals("Central")) {
+            lista.add(new String[]{"Hospital General de San Lorenzo (Calleí) (MSPBS)", "SI"});
+            lista.add(new String[]{"Hospital de Especialidades Quirúrgicas Ingavi (IPS)", "NO"});
+        } else if (departamento.equals("Capital (Asunción)")) {
+            lista.add(new String[]{"Hospital de Clínicas (UNA)", "SI"});
+            lista.add(new String[]{"Hospital General Barrio Obrero (MSPBS)", "SI"});
+            lista.add(new String[]{"Hospital Central del IPS", "SI"});
+        } else {
+            // Ejemplo genérico para los demás departamentos del país
+            lista.add(new String[]{"Hospital Regional de " + departamento, "SI"});
+            lista.add(new String[]{"Centro de Salud Distrital", "NO"});
+        }
+        return lista;
     }
 
+    // Obtener lista de hospitales que tienen citas registradas para el panel de administración
     public String[] obtenerTodosLosHospitalesConCitas() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT DISTINCT hospital FROM solicitudes", null);
-        List<String> lista = new ArrayList<>();
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                lista.add(cursor.getString(0));
-            } while (cursor.moveToNext());
+        Cursor cursor = db.rawQuery("SELECT DISTINCT hospital FROM citas", null);
+
+        if (cursor.getCount() == 0) {
+            cursor.close();
+            return new String[]{"Sin citas registradas aún"};
         }
-        if (cursor != null) cursor.close();
-        db.close();
-        if (lista.isEmpty()) return new String[]{"Sin citas agendadas aún"};
-        return lista.toArray(new String[0]);
+
+        String[] hospitales = new String[cursor.getCount()];
+        int i = 0;
+        while (cursor.moveToNext()) {
+            hospitales[i] = cursor.getString(0);
+            i++;
+        }
+        cursor.close();
+        return hospitales;
     }
 
+    // Obtener reporte de citas por hospital para el panel admin (PIN 1234)
     public String obtenerCitasPorHospital(String hospital) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM solicitudes WHERE hospital = ? ORDER BY fecha ASC, hora ASC", new String[]{hospital});
-        StringBuilder sb = new StringBuilder();
-        sb.append("🏥 CITAS AGENDADAS EN:\n").append(hospital).append("\n===================================\n\n");
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                sb.append("📅 Fecha: ").append(cursor.getString(cursor.getColumnIndexOrThrow("fecha")))
-                        .append(" - ⏰ Hora: ").append(cursor.getString(cursor.getColumnIndexOrThrow("hora")))
-                        .append("\n🩺 Esp: ").append(cursor.getString(cursor.getColumnIndexOrThrow("especialidad")))
-                        .append("\n👤 Paciente: ").append(cursor.getString(cursor.getColumnIndexOrThrow("nombre")))
-                        .append(" (CI: ").append(cursor.getString(cursor.getColumnIndexOrThrow("cedula"))).append(")")
-                        .append("\n📞 Contacto: ").append(cursor.getString(cursor.getColumnIndexOrThrow("telefono")))
-                        .append("\n-----------------------------------\n");
-            } while (cursor.moveToNext());
+        Cursor cursor = db.rawQuery("SELECT cedula, nombre, especialidad, fecha, hora FROM citas WHERE hospital = ?", new String[]{hospital});
+
+        if (cursor.getCount() == 0) {
+            cursor.close();
+            return "No hay citas registradas para este centro.";
         }
-        if (cursor != null) cursor.close();
-        db.close();
+
+        StringBuilder sb = new StringBuilder();
+        while (cursor.moveToNext()) {
+            sb.append("🆔 Cédula: ").append(cursor.getString(0)).append("\n")
+                    .append("👤 Paciente: ").append(cursor.getString(1)).append("\n")
+                    .append("🩺 Especialidad: ").append(cursor.getString(2)).append("\n")
+                    .append("📅 Fecha/Hora: ").append(cursor.getString(3)).append(" - ").append(cursor.getString(4)).append("\n")
+                    .append("---------------------------\n");
+        }
+        cursor.close();
         return sb.toString();
     }
 }
