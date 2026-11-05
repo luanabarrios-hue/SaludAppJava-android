@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F9FA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Agendamiento de Citas - SaludApp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1B365D"
+            android:layout_marginBottom="12dp"/>
+
+        <EditText
+            android:id="@+id/inputCedula"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="1. Cédula de Identidad"
+            android:inputType="number"
+            android:padding="10dp"
+            android:background="#FFFFFF"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/inputNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="2. Nombre y Apellido"
+            android:inputType="textPersonName"
+            android:padding="10dp"
+            android:background="#FFFFFF"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/inputTelefono"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="3. Teléfono / WhatsApp (Ej: 0981123456)"
+            android:inputType="phone"
+            android:padding="10dp"
+            android:background="#FFFFFF"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnSeleccionarEspecialidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="4. ELEGIR ESPECIALIDAD MÉDICA"
+            android:backgroundTint="#2E6B9E"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnSeleccionarDepartamento"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="5. ELEGIR DEPARTAMENTO (17 DEPTO DE PY)"
+            android:backgroundTint="#27AE60"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnSeleccionarHospital"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="6. SELECCIONAR HOSPITAL DEL DEPARTAMENTO"
+            android:backgroundTint="#8E44AD"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btnVerDisponibilidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="VER DISPONIBILIDAD Y AGENDAR CITA"
+            android:backgroundTint="#E67E22"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- Botones de Sincronización Bidireccional (Semana 3) -->
+        <Button
+            android:id="@+id/btnSincronizarBackend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔄 SINCRONIZAR CITAS (ENVIAR AL SERVIDOR)"
+            android:backgroundTint="#16A085"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnDescargarBackend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📥 DESCARGAR NOVEDADES DEL SERVIDOR"
+            android:backgroundTint="#2980B9"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnVerCitasAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PANEL ADMIN POR HOSPITAL (PIN 1234)"
+            android:backgroundTint="#1B365D"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnVolver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="VOLVER"
+            android:backgroundTint="#7F8C8D"
+            android:textColor="#FFFFFF"
+            android:padding="8dp"/>
+
+    </LinearLayout>
+</ScrollView>
